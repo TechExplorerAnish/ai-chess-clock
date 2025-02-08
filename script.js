@@ -7,7 +7,7 @@ let player2Time = timeLimit;
 let currentPlayer = 1;
 let startTime;
 let isRunning = false;
-let cooldownTime = 1000; // 1 second cooldown in milliseconds
+let cooldownTime = 2000; 
 let lastSwitchTime = 0;
 let handPose;
 let video;
