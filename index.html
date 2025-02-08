@@ -1,0 +1,234 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Chess Timer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-gray-900 text-white p-4 font-sans">
+    <div
+      id="loading-overlay"
+      class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 flex items-center justify-center"
+    >
+      <div class="text-center space-y-4">
+        <div
+          class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"
+        ></div>
+        <p class="text-blue-400">Initializing hand detection...</p>
+      </div>
+    </div>
+    <main class="max-w-2xl mx-auto">
+      <h1 class="text-3xl font-bold text-center mb-8 text-blue-400">
+        Smart Chess Timer
+      </h1>
+
+      <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <!-- Player 1 Timer -->
+        <div id="player1-container" class="relative">
+          <div
+            class="bg-gray-800 rounded-lg p-6 h-48 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+            id="player1-box"
+          >
+            <!-- Warning Banner -->
+            <div
+              id="player1-warning"
+              class="absolute top-0 left-0 right-0 hidden"
+            >
+              <div
+                class="bg-red-500/20 text-red-300 text-sm py-1 px-3 rounded-t-lg text-center"
+              >
+                Low Time Warning!
+              </div>
+            </div>
+
+            <div class="flex flex-col h-full justify-between">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                  <span id="player1-name" class="text-xl font-semibold"
+                    >Player 1</span
+                  >
+                  <button
+                    disabled
+                    onclick="editPlayerName(1)"
+                    class="text-gray-400 hover:text-blue-400"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  class="h-3 w-3 rounded-full bg-gray-500"
+                  id="player1-indicator"
+                ></div>
+              </div>
+              <div
+                id="player1-time"
+                class="text-5xl font-bold text-center my-4 transition-colors duration-300"
+              >
+                05:00
+              </div>
+              <div class="text-sm text-gray-400 text-center">
+                Wave right hand to switch
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player 2 Timer -->
+        <div id="player2-container" class="relative">
+          <div
+            class="bg-gray-800 rounded-lg p-6 h-48 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+            id="player2-box"
+          >
+            <!-- Warning Banner -->
+            <div
+              id="player2-warning"
+              class="absolute top-0 left-0 right-0 hidden"
+            >
+              <div
+                class="bg-red-500/20 text-red-300 text-sm py-1 px-3 rounded-t-lg text-center"
+              >
+                Low Time Warning!
+              </div>
+            </div>
+
+            <div class="flex flex-col h-full justify-between">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                  <span id="player2-name" class="text-xl font-semibold"
+                    >Player 2</span
+                  >
+                  <button
+                    disabled
+                    onclick="editPlayerName(2)"
+                    class="text-gray-400 hover:text-blue-400"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  class="h-3 w-3 rounded-full bg-gray-500"
+                  id="player2-indicator"
+                ></div>
+              </div>
+              <div
+                id="player2-time"
+                class="text-5xl font-bold text-center my-4 transition-colors duration-300"
+              >
+                05:00
+              </div>
+              <div class="text-sm text-gray-400 text-center">
+                Wave left hand to switch
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera Feed with Toggle -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm text-gray-400">Camera Feed</span>
+          <button
+            disabled
+            id="toggle-camera"
+            class="text-sm px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+          >
+            Hide Camera
+          </button>
+        </div>
+        <div
+          id="sketch-container"
+          class="mx-auto flex justify-center rounded-lg overflow-hidden bg-gray-800 p-2 transition-all duration-300"
+        ></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="space-y-6">
+        <div id="sliderContainer" class="flex flex-col space-y-2">
+          <label for="time-slider" class="text-sm text-gray-400">
+            Time per player (minutes): <span id="time-display">5</span>
+          </label>
+          <input
+            type="range"
+            id="time-slider"
+            min="1"
+            max="30"
+            value="5"
+            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+          />
+          <!-- Warning Threshold Setting -->
+          <label for="warning-slider" class="text-sm text-gray-400 mt-4">
+            Warning threshold (seconds): <span id="warning-display">30</span>
+          </label>
+          <input
+            type="range"
+            id="warning-slider"
+            min="5"
+            max="60"
+            value="30"
+            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+          />
+        </div>
+
+        <div class="flex justify-center gap-4">
+          <button
+            disabled
+            id="start"
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-200 font-semibold"
+          >
+            Start Game
+          </button>
+          <button
+            disabled
+            id="reset"
+            class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200 font-semibold"
+          >
+            Reset
+          </button>
+        </div>
+
+        <div class="flex justify-center">
+          <button
+            disabled
+            onclick="clearPlayerNames()"
+            class="text-sm text-gray-400 hover:text-red-400 transition-colors"
+          >
+            Clear Saved Names
+          </button>
+        </div>
+      </div>
+    </main>
+    <script src="./script.js"></script>
+  </body>
+</html>
